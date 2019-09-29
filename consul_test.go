@@ -1,6 +1,7 @@
 package viper_consul
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -9,6 +10,50 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/spf13/viper"
 )
+
+type configS struct {
+	Key   string
+	Value string
+}
+
+func TestConsulConfigProvider(t *testing.T) {
+	c, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.KV().DeleteTree("", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := &configS{
+		Key:   "key",
+		Value: "value",
+	}
+	b, err := json.Marshal(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.KV().Put(&api.KVPair{
+		Key:   "config.json",
+		Value: b,
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	viper.AddRemoteProvider("consul", "127.0.0.1:8500", "config.json")
+	viper.SetConfigFile("config.json")
+	err = viper.ReadRemoteConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newConfig := &configS{}
+	err = viper.Unmarshal(newConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(newConfig)
+}
 
 func remoteProvider(path string) viper.RemoteProvider {
 	return &defaultRemoteProvider{

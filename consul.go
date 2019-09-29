@@ -2,6 +2,7 @@ package viper_consul
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -66,7 +67,7 @@ func (cp *consulConfigProvider) Get(rp viper.RemoteProvider) (io.Reader, error) 
 		return nil, err
 	}
 	if kv == nil {
-		return nil, nil
+		return nil, fmt.Errorf("Key ( %s ) was not found", rp.Path())
 	}
 	return bytes.NewReader(kv.Value), nil
 }
