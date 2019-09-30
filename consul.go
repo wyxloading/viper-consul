@@ -15,10 +15,23 @@ import (
 
 var (
 	logger = log.New(os.Stderr, "viper-consul", log.LstdFlags)
+	cp     = newConsulConfigProvider()
 )
 
+func Get(rp viper.RemoteProvider) (io.Reader, error) {
+	return cp.Get(rp)
+}
+
+func Watch(rp viper.RemoteProvider) (io.Reader, error) {
+	return cp.Watch(rp)
+}
+
+func WatchChannel(rp viper.RemoteProvider) (<-chan *viper.RemoteResponse, chan bool) {
+	return cp.WatchChannel(rp)
+}
+
 func init() {
-	viper.RemoteConfig = newConsulConfigProvider()
+	viper.RemoteConfig = cp
 }
 
 func newConsulConfigProvider() *consulConfigProvider {
